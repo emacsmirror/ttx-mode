@@ -87,11 +87,23 @@ Set to nil to start with only the skeleton."
                      tables "\n")
           "\n</ttFont>\n"))
 
+(defun ttx--run-command (&rest args)
+  "Run `ttx-command' with ARGS and return stdout as a string.
+Signals a `user-error' if the command is not found or exits non-zero."
+  (with-temp-buffer
+    (let ((exit-code (condition-case _
+                         (apply #'call-process ttx-command nil t nil args)
+                       (file-error
+                        (user-error "Cannot run ttx.  Is it installed? Check ttx-command (currently: %s)"
+                                    ttx-command)))))
+      (unless (zerop exit-code)
+        (user-error "Command ttx failed (exit %d).  Is ttx installed? Check ttx-command (currently: %s)"
+                    exit-code ttx-command))
+      (buffer-string))))
+
 (defun ttx--load-table-list (filename)
   "Load table list from FILENAME using `ttx -l`."
-  (let ((output (shell-command-to-string
-                 (format "%s -l %s" ttx-command (shell-quote-argument filename)))))
-    (ttx--parse-table-list output)))
+  (ttx--parse-table-list (ttx--run-command "-l" filename)))
 
 (defun ttx--extract-table-xml (xml-output table-tag)
   "Extract just the TABLE-TAG element from XML-OUTPUT."
@@ -109,7 +121,7 @@ Set to nil to start with only the skeleton."
               nil)))))))
 
 (defun ttx--decompress-woff2 (woff2-filename)
-  "Decompress WOFF2-FILENAME to a temp directory and return the resulting .ttf path.
+  "Decompress WOFF2-FILENAME resulting temp filename.
 The temp directory is stored in `ttx--temp-dir' and cleaned up on buffer kill."
   (let* ((temp-dir (make-temp-file "ttx-woff2-" t))
          (base (file-name-nondirectory woff2-filename))
@@ -117,13 +129,18 @@ The temp directory is stored in `ttx--temp-dir' and cleaned up on buffer kill."
          (ttf-name (concat (file-name-sans-extension base) ".ttf"))
          (temp-ttf (expand-file-name ttf-name temp-dir)))
     (copy-file woff2-filename temp-woff2)
-    (let ((exit-code (call-process ttx-woff2-decompress-command nil nil nil temp-woff2)))
+    (let ((exit-code (condition-case _
+                         (call-process ttx-woff2-decompress-command nil nil nil temp-woff2)
+                       (file-error
+                        (delete-directory temp-dir t)
+                        (user-error "Cannot run woff2_decompress — is it installed? Check ttx-woff2-decompress-command (currently: %s)"
+                                    ttx-woff2-decompress-command)))))
       (unless (zerop exit-code)
         (delete-directory temp-dir t)
-        (error "woff2_decompress failed with exit code %d for %s" exit-code woff2-filename)))
+        (error "Command woff2_decompress failed with exit code %d for %s" exit-code woff2-filename)))
     (unless (file-exists-p temp-ttf)
       (delete-directory temp-dir t)
-      (error "woff2_decompress did not produce %s" temp-ttf))
+      (error "Command woff2_decompress did not produce %s" temp-ttf))
     (setq ttx--temp-dir temp-dir)
     (add-hook 'kill-buffer-hook #'ttx--cleanup-temp-dir nil t)
     temp-ttf))
@@ -162,13 +179,10 @@ TABLE-TAGS is a list of table tag strings."
   (unless ttx-font-filename
     (user-error "No font file associated with this buffer"))
   (when table-tags
-    (let* ((tags-args (mapconcat (lambda (tag) (format "-t %s" (shell-quote-argument tag)))
-                                table-tags " "))
-           (cmd (format "%s -q %s -o - %s"
-                        ttx-command
-                        tags-args
-                        (shell-quote-argument ttx-font-filename)))
-           (xml-output (shell-command-to-string cmd)))
+    (let* ((xml-output (apply #'ttx--run-command
+                              "-q"
+                              (append (cl-mapcan (lambda (tag) (list "-t" tag)) table-tags)
+                                      (list "-o" "-" ttx-font-filename)))))
       (dolist (tag table-tags)
         (let ((table-xml (ttx--extract-table-xml xml-output tag)))
           (if (not table-xml)

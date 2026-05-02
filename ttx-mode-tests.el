@@ -81,9 +81,8 @@
   "Loading all tables produces a buffer with every table present."
   (ttx-test-with-font ttx-test-font-ttf
     (ttx-load-all-tables)
-    (let ((contents (buffer-string)))
-      (should (equal (buffer-string)
-                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    (should (equal (buffer-string)
+                   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <ttFont>
   <!-- Available tables (use ttx-load-table to load): -->
   <!-- OS/2 (96B) -->
@@ -663,14 +662,14 @@
     </extraNames>
   </post>
 </ttFont>
-")))))
+"))))
 
 (ert-deftest ttx-mode-opens-ttf ()
   "Opening a ttf font shows table metadata."
   (let ((ttx-default-tables '("cmap")))
     (ttx-test-with-font ttx-test-font-ttf
       (should (equal (buffer-string)
-                                                       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <ttFont>
   <!-- Available tables (use ttx-load-table to load): -->
   <!-- OS/2 (96B) -->
@@ -708,7 +707,7 @@
     ;; buffer, but the encoding subtly changes some of the contents.
     (ttx-test-with-font ttx-test-font-woff2
       (should (equal (buffer-string)
-                                                       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <ttFont>
   <!-- Available tables (use ttx-load-table to load): -->
   <!-- OS/2 (96B) -->
@@ -833,6 +832,20 @@
       (ttx-revert-buffer nil nil)
       (should (equal ttx--loaded-tables '("head")))
       (should (equal (buffer-string) ttx-test-font-ttf-as-ttx-with-head)))))
+
+(ert-deftest ttx-missing-command-signals-error ()
+  "ttx--run-command signals a user-error when ttx-command is not found."
+  (let ((ttx-command "/usr/bin/does-not-exist"))
+    (should-error
+     (ttx--run-command "-l" ttx-test-font-ttf)
+     :type 'user-error)))
+
+(ert-deftest ttx-missing-woff2-command-signals-error ()
+  "ttx--decompress-woff2 signals a user-error when woff2_decompress is not found."
+  (let ((ttx-woff2-decompress-command "/usr/bin/does-not-exist"))
+    (should-error
+     (ttx--decompress-woff2 ttx-test-font-woff2)
+     :type 'user-error)))
 
 (provide 'ttx-mode-tests)
 ;;; ttx-mode-tests.el ends here

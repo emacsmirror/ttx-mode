@@ -220,10 +220,11 @@ If TABLE-TAG is \"all\", load all available tables."
        (list (completing-read "Unload table: "
                               ttx--loaded-tables
                               nil t)))))
-  (let ((inhibit-read-only t))
+  (let ((inhibit-read-only t)
+        (search-tag (string-replace "/" "_" table-tag)))
     (goto-char (point-min))
-    (let ((start-regex (format "^\\s-*<%s\\b" (regexp-quote table-tag)))
-          (end-regex (format "^\\s-*</%s>" (regexp-quote table-tag))))
+    (let ((start-regex (format "^\\s-*<%s\\b" (regexp-quote search-tag)))
+          (end-regex (format "^\\s-*</%s>" (regexp-quote search-tag))))
       (if (re-search-forward start-regex nil t)
           (progn
             (beginning-of-line)
@@ -252,32 +253,6 @@ If TABLE-TAG is \"all\", load all available tables."
     map)
   "Keymap for `ttx-mode'.")
 
-(defun ttx--convert-to-xml (filename)
-  "Convert FILENAME to XML using `ttx` asynchronously."
-  (let ((inhibit-read-only t)
-        (buffer (current-buffer))
-        (full-path (expand-file-name filename)))
-    (erase-buffer)
-    (insert (format "<!-- Decompiling %s... -->\n" (file-name-nondirectory filename)))
-    (let ((proc (start-process "ttx" buffer ttx-command "-q" "-o" "-" full-path)))
-      (set-process-sentinel
-       proc
-       (lambda (p _msg)
-         (when (and (memq (process-status p) '(exit signal))
-                    (buffer-live-p buffer))
-           (let ((exit-status (process-exit-status p)))
-             (with-current-buffer buffer
-               (let ((inhibit-read-only t))
-                 (if (zerop exit-status)
-                     (progn
-                       ;; Remove the "Decompiling..." comment
-                       (goto-char (point-min))
-                       (delete-region (point-min) (1+ (line-end-position)))
-                       (set-buffer-modified-p nil)
-                       (message "TTX: Finished decompiling %s" filename))
-                   (goto-char (point-max))
-                   (insert (format "\n\nError: ttx failed with exit code %d" exit-status))
-                   (error "TTX conversion failed for %s" filename)))))))))))
 
 (defun ttx-revert-buffer (_ignore-auto _noconfirm)
   "Revert the ttx buffer by re-initializing with table skeleton."

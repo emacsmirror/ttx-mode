@@ -816,6 +816,15 @@
       (ttx-unload-table "head")
       (should-not (buffer-modified-p)))))
 
+(ert-deftest ttx-unload-table-slash-tag ()
+  "Unloading a table whose tag contains '/' (e.g. OS/2) works correctly."
+  (let ((ttx-default-tables '("OS/2")))
+    (ttx-test-with-font ttx-test-font-ttf
+      (should (member "OS/2" ttx--loaded-tables))
+      (ttx-unload-table "OS/2")
+      (should-not (member "OS/2" ttx--loaded-tables))
+      (should (equal (buffer-string) ttx-test-font-ttf-as-ttx)))))
+
 (ert-deftest ttx-revert-buffer ()
   "Reverting the buffer resets it to the default table state."
   (let ((ttx-default-tables '("head")))

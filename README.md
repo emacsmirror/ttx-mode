@@ -43,10 +43,11 @@ with `ttx-load-table`.
 
 ### Keybindings
 
-| Key       | Command            | Description                    |
-|-----------|--------------------|--------------------------------|
-| `C-c C-l` | `ttx-load-table`   | Load a table into the buffer   |
-| `C-c C-k` | `ttx-unload-table` | Remove a table from the buffer |
+| Key           | Command              | Description                    |
+|---------------|----------------------|--------------------------------|
+| `C-c C-l`     | `ttx-load-table`     | Load a table into the buffer   |
+| `C-c C-M-l`   | `ttx-load-all-tables`| Load all tables into the buffer|
+| `C-c C-k`     | `ttx-unload-table`   | Remove a table from the buffer |
 
 To refresh the buffer (unload all tables): `M-x revert-buffer`
 
@@ -61,6 +62,12 @@ Configure which tables are loaded automatically when opening a font:
 (setq ttx-default-tables nil)                      ; start with skeleton only
 ```
 
+
+## Testing
+
+```sh
+emacs -batch -l ttx-mode.el -l ttx-mode-tests.el -f ert-run-tests-batch-and-exit
+```
 
 ## License
 

@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2026 wmedrano
 
-;; Author: wmedrano
+;; Author: Will Medrano <will@wmedrano.dev>
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "30.0"))
 ;; Keywords: tools, fonts

@@ -3,6 +3,7 @@
 ;; Copyright (C) 2026 wmedrano
 
 ;; Author: Will Medrano <will@wmedrano.dev>
+;; Assisted-by: OpenCode:N/A
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "30.0"))
 ;; Keywords: tools, fonts
@@ -235,6 +236,7 @@ If TABLE-TAG is \"all\", load all available tables."
                               ttx--loaded-tables
                               nil t)))))
   (let ((inhibit-read-only t)
+        ;; / is reserved in XML so we use underscore.
         (search-tag (string-replace "/" "_" table-tag)))
     (goto-char (point-min))
     (let ((start-regex (format "^\\s-*<%s\\b" (regexp-quote search-tag)))

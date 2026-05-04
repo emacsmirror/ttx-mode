@@ -6,6 +6,16 @@ Inspect ttf/otf/woff2 font files as XML.
 
 ## Installation
 
+### MELPA
+
+`ttx-mode` is available on [MELPA](https://melpa.org/). If you haven't set up MELPA yet, see the [getting started guide](https://melpa.org/#/getting-started).
+
+You can install it with:
+
+`M-x package-install RET ttx-mode RET`
+
+### Manual
+
 Add `ttx-mode` to your load path and require it:
 
 ```elisp

@@ -245,7 +245,7 @@ If TABLE-TAG is \"all\", load all available tables."
           (progn
             (beginning-of-line)
             ;; Also delete preceding blank lines
-            (while (and (> (point) (point-min))
+            (while (and (not (bobp))
                         (save-excursion
                           (forward-line -1)
                           (looking-at-p "^\\s-*$")))

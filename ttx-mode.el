@@ -68,13 +68,10 @@ Set to nil to start with only the skeleton."
 
 (defun ttx--parse-table-list (output)
   "Parse OUTPUT from `ttx -l` into an alist of (TAG . LENGTH)."
-  (let (tables)
-    (dolist (line (split-string output "\n" t))
-      (when (string-match "^\\s-*\\([A-Za-z0-9/]+\\)\\s-+0x[0-9A-Fa-f]+\\s-+\\([0-9]+\\)" line)
-        (push (cons (match-string 1 line)
-                    (string-to-number (match-string 2 line)))
-              tables)))
-    (nreverse tables)))
+  (cl-loop for line in (split-string output "\n" t)
+           when (string-match "^\\s-*\\([A-Za-z0-9/]+\\)\\s-+0x[0-9A-Fa-f]+\\s-+\\([0-9]+\\)" line)
+           collect (cons (match-string 1 line)
+                         (string-to-number (match-string 2 line)))))
 
 (defun ttx--generate-skeleton (tables)
   "Generate skeleton XML with TABLES listed as comments."
@@ -288,7 +285,7 @@ If TABLE-TAG is \"all\", load all available tables."
              (if (string-match-p "\\.woff2\\'" filename)
                  (ttx--decompress-woff2 filename)
                filename)))
-        (setq-local ttx-font-filename filename)
+        (setq-local ttx-font-filename font-filename)
         (ttx--init-buffer font-filename)))))
 
 ;;;###autoload

@@ -164,7 +164,8 @@ The temp directory is stored in `ttx--temp-dir' and cleaned up on buffer kill."
            (to-load (cl-remove-if-not (lambda (tag) (member tag available-tags))
                                       ttx-default-tables)))
       (ttx-load-tables to-load))
-    (goto-char (point-min))))
+    (goto-char (point-min)))
+  (setq-local buffer-read-only  t))
 
 (defun ttx--available-tables-to-load ()
   "Return list of tables not yet loaded."
@@ -281,14 +282,13 @@ If TABLE-TAG is \"all\", load all available tables."
   "Major mode for viewing TrueType/OpenType font files as XML."
   :keymap ttx-mode-map
   (setq-local revert-buffer-function #'ttx-revert-buffer)
-  (setq buffer-read-only t)
-  (let ((filename (buffer-file-name)))
+  (let ((filename          (buffer-file-name)))
     (when (and filename (not ttx-font-filename))
       (let ((font-filename
              (if (string-match-p "\\.woff2\\'" filename)
                  (ttx--decompress-woff2 filename)
                filename)))
-        (setq-local ttx-font-filename font-filename)
+        (setq-local ttx-font-filename filename)
         (ttx--init-buffer font-filename)))))
 
 ;;;###autoload

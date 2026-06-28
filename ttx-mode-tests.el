@@ -847,5 +847,25 @@
      (ttx--decompress-woff2 ttx-test-font-woff2)
      :type 'user-error)))
 
+(ert-deftest ttx-mode-failed-init-leaves-recoverable-buffer ()
+  "After a failed mode activation the buffer must remain recoverable.
+The buffer must stay editable and the mode must be re-entrant so the
+user can retry after fixing the cause."
+  (let ((ttx-woff2-decompress-command "/usr/bin/does-not-exist")
+        (ttx-default-tables nil))
+    (with-temp-buffer
+      (setq buffer-file-name ttx-test-font-woff2)
+      ;; Activation signals a user-error mid-init.
+      (let ((err (should-error (ttx-mode) :type 'user-error)))
+        (should (string-match-p "woff2" (error-message-string err))))
+      ;; Init never finished: the buffer stays writable...
+      (should-not buffer-read-only)
+      (with-demoted-errors "insert: %S"
+        (insert "editable"))
+      ;; ...and ttx-font-filename is unset, so a retry actually re-runs.
+      (should-not ttx-font-filename)
+      ;; Retrying the mode must not silently no-op.
+      (should-error (ttx-mode) :type 'user-error))))
+
 (provide 'ttx-mode-tests)
 ;;; ttx-mode-tests.el ends here
